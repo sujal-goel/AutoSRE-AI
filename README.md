@@ -48,7 +48,7 @@ To run the automated `inference.py` grader loop and watch the LLM solve the envi
 
 **Windows (PowerShell):**
 ```powershell
-$env:HF_TOKEN="your_openai_api_key_here"
+$env:HF_TOKEN="your_openai_or_hf_api_key_here"
 $env:MODEL_NAME="gpt-4o"
 python inference.py
 ```
