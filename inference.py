@@ -58,25 +58,24 @@ def log_end(success: bool, steps: int, score: float, rewards: list[float]):
     print(f"[END] success={str(success).lower()} steps={steps} score={score:.2f} rewards={rewards_str}", flush=True)
 
 async def get_action_from_llm(client: AsyncOpenAI, obs_text: str) -> Action:
-    prompt = f"""
-    You are an Autonomous SRE Agent.
-    
-    Current state observation:
-    {obs_text}
-    
-    Choose ONE action_type:
-    - scale_up
-    - scale_down
-    - kill_zombies
-    - route_traffic
-    - clear_cache
-    - restart_service
+    prompt = f"""You are an Autonomous SRE Agent monitoring a live production cluster.
 
-    Choose target (server ID or service name, e.g. "server_1", "primary", "backup_zone").
-    
-    Respond in STRICT JSON format:
-    {{"action_type": "type", "target": "target_name"}}
-    """
+Current system observation (JSON):
+{obs_text}
+
+Your job: diagnose the incident and pick ONE remediation action.
+
+INCIDENT GUIDE:
+- High CPU usage (>80%) + active alerts -> use "scale_up" on that server
+- DB connections > 4500 -> use "kill_zombies" on "primary"
+- cache_status="failed" -> first "route_traffic" to "backup_zone", then "clear_cache", then "restart_service" on "primary"
+- System is stable -> use "scale_down" to avoid over-provisioning costs
+
+ACTION TYPES: scale_up, scale_down, kill_zombies, route_traffic, clear_cache, restart_service
+TARGET: the server or zone name from the observation (e.g. "server_1", "primary", "backup_zone")
+
+Respond ONLY with valid JSON, no extra text:
+{{"action_type": "type", "target": "target_name"}}"""
 
     try:
         response = await client.chat.completions.create(
@@ -85,9 +84,20 @@ async def get_action_from_llm(client: AsyncOpenAI, obs_text: str) -> Action:
             response_format={"type": "json_object"}
         )
         content = response.choices[0].message.content
+
+        # Strip thinking tags from reasoning models (e.g. Qwen3, DeepSeek-R1)
+        import re
+        content = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL).strip()
+
+        # Extract first JSON block if extra text exists
+        json_match = re.search(r"\{.*?\}", content, re.DOTALL)
+        if json_match:
+            content = json_match.group(0)
+
         data = json.loads(content)
         return Action(action_type=data.get("action_type", ""), target=data.get("target", ""))
     except Exception as e:
+        print(f"LLM Exception: {str(e)}", flush=True)
         return Action(action_type="unknown", target="")
 
 async def run_task(task_name: str, grader_func, client: AsyncOpenAI):
