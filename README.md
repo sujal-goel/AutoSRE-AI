@@ -43,12 +43,18 @@ First, install the required dependencies:
 pip install -r requirements.txt
 ```
 
-### 2. Run Local Agent Simulation
+### 2. Run Deterministic Logic Demo (No Keys Required)
+If you just want to evaluate the underlying environment physics, graders, and state transitions without configuring an LLM, run the hardcoded proof-of-concept demo:
+```bash
+python demo.py
+```
+
+### 3. Run LLM Agent Simulation
 To run the automated `inference.py` grader loop and watch the LLM solve the environments organically, configure your API keys on the CLI:
 
 **Windows (PowerShell):**
 ```powershell
-$env:HF_TOKEN="your_openai_or_hf_api_key_here"
+$env:HF_TOKEN="your_openai_api_key_here"
 $env:MODEL_NAME="gpt-4o"
 python inference.py
 ```
