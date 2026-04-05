@@ -2,21 +2,11 @@
 # - run project in container
 
 # WHY:
-# - required for deployment
+# - required for HuggingFace Spaces deployment
 
 # MUST:
-# - docker build works
-# - docker run works
-
-# PURPOSE:
-# - run project in container
-
-# WHY:
-# - required for deployment
-
-# MUST:
-# - docker build works
-# - docker run works
+# - expose port 7860 (HuggingFace standard)
+# - docker build and run work cleanly
 
 FROM python:3.11-slim
 
