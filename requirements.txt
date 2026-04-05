@@ -7,3 +7,4 @@ openai
 aiohttp
 pyyaml
 loguru
+openenv-core

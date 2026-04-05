@@ -9,3 +9,35 @@
 # - tasks
 # - action space
 # - observation space
+
+# OpenEnv Metadata
+
+name: "Autonomous SRE Manager"
+version: "1.0.0"
+description: "Agent manages cloud server clusters by resolving CPU spikes, connection leaks, and caching outages."
+
+tasks:
+  - id: "sre-easy-cpu-spike"
+    difficulty: "easy"
+  - id: "sre-medium-db-zombie"
+    difficulty: "medium"
+  - id: "sre-hard-cache-failure"
+    difficulty: "hard"
+
+action_space:
+  type: "json"
+  schema: |
+    {
+      "action_type": "string (scale_up|scale_down|restart_service|kill_zombies|clear_cache|route_traffic)",
+      "target": "string (service name or server id)"
+    }
+
+observation_space:
+  type: "json"
+  schema: |
+    {
+      "cpu_usage": "map[string]float",
+      "db_connections": "int",
+      "active_alerts": "list[string]",
+      "traffic_level": "int"
+    }
