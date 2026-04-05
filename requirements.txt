@@ -7,4 +7,5 @@ openai
 aiohttp
 pyyaml
 loguru
-openenv-core
+openenv-core
+uvicorn[standard]
