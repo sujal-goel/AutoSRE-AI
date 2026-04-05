@@ -1,0 +1,215 @@
+========================================
+POSTMAN TESTING GUIDE (FULL PROJECT)
+========================================
+
+PURPOSE:
+- Test backend APIs
+- Verify environment works correctly
+- Ensure OpenEnv endpoints (/reset, /step, /state) work
+
+----------------------------------------
+STEP 0: START SERVER
+----------------------------------------
+
+Run in terminal:
+
+uvicorn app.api.routes:app --reload
+
+Expected:
+Server runs at:
+http://127.0.0.1:8000
+
+----------------------------------------
+STEP 1: TEST ROOT (OPTIONAL)
+----------------------------------------
+
+GET http://127.0.0.1:8000/
+
+Expected Response:
+{
+  "message": "AI Environment Running 🚀"
+}
+
+----------------------------------------
+STEP 2: TEST RESET (VERY IMPORTANT)
+----------------------------------------
+
+POST http://127.0.0.1:8000/reset
+
+No body required
+
+Expected Response:
+{
+  "observation": {
+    "data": {
+      "value": 0
+    },
+    "message": "Current environment state"
+  }
+}
+
+✔ Check:
+- step_count reset to 0
+- value initialized
+- no error
+
+----------------------------------------
+STEP 3: TEST STEP (MAIN FUNCTION)
+----------------------------------------
+
+POST http://127.0.0.1:8000/step
+
+Body (JSON):
+{
+  "action_type": "increase",
+  "parameters": {
+    "value": 50
+  }
+}
+
+Expected Response:
+{
+  "observation": {...},
+  "reward": 0.5,
+  "done": false,
+  "info": {}
+}
+
+✔ Check:
+- value updated
+- reward calculated
+- done is false initially
+
+----------------------------------------
+STEP 4: MULTIPLE STEPS
+----------------------------------------
+
+Repeat STEP API multiple times
+
+Example:
+{
+  "action_type": "increase",
+  "parameters": {
+    "value": 20
+  }
+}
+
+✔ Check:
+- value keeps increasing
+- reward updates correctly
+- after max steps → done = true
+
+----------------------------------------
+STEP 5: TEST STATE (IMPORTANT)
+----------------------------------------
+
+GET http://127.0.0.1:8000/state
+
+Expected Response:
+{
+  "state": {
+    "step_count": X,
+    "done": false/true,
+    "data": {
+      "value": ...
+    }
+  }
+}
+
+✔ Check:
+- matches previous steps
+- correct state tracking
+
+----------------------------------------
+STEP 6: TEST DONE CONDITION
+----------------------------------------
+
+Keep calling /step until:
+
+"done": true
+
+✔ Check:
+- after max_steps (10)
+- no further changes expected
+
+----------------------------------------
+STEP 7: EDGE CASE TESTING (VERY IMPORTANT)
+----------------------------------------
+
+1. Invalid action:
+{
+  "action_type": "unknown"
+}
+
+Expected:
+- no crash
+- safe handling
+
+----------------------------------------
+
+2. Negative values:
+{
+  "action_type": "decrease",
+  "parameters": {
+    "value": 100
+  }
+}
+
+✔ Check:
+- system handles negative values
+
+----------------------------------------
+
+3. Missing parameters:
+{
+  "action_type": "increase"
+}
+
+✔ Check:
+- default handling (no crash)
+
+----------------------------------------
+
+4. Step after done:
+✔ Call /step after done=true
+
+Expected:
+- no state change
+- done remains true
+
+----------------------------------------
+STEP 8: PERFORMANCE CHECK
+----------------------------------------
+
+✔ API response time fast
+✔ no lag
+✔ no errors in terminal
+
+----------------------------------------
+STEP 9: FINAL VALIDATION CHECKLIST
+----------------------------------------
+
+✔ /reset works
+✔ /step works
+✔ /state works
+✔ reward updating correctly
+✔ done condition working
+✔ no crashes
+✔ consistent results
+
+----------------------------------------
+IMPORTANT NOTES (HACKATHON)
+----------------------------------------
+
+✔ These endpoints MUST work:
+- /reset
+- /step
+- /state
+
+✔ Required by OpenEnv problem
+
+✔ If any fails → disqualified
+
+----------------------------------------
+END OF TESTING
+----------------------------------------

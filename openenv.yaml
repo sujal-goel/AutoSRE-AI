@@ -1,0 +1,11 @@
+# PURPOSE:
+# - metadata for environment
+
+# WHY:
+# - required for validation
+
+# INCLUDE:
+# - name
+# - tasks
+# - action space
+# - observation space
