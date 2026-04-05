@@ -1,18 +1,3 @@
-# 🔥 VERY IMPORTANT
-
-# PURPOSE:
-# - complex decision task
-
-# WHY:
-# - judges check difficulty
-
-# EXAMPLE:
-# crisis:
-# low cash + high debt
-# choose:
-# - fire employees
-# - take loan
-
 
 """
 🔥 MOST IMPORTANT TASK

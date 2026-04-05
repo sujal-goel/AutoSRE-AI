@@ -19,4 +19,6 @@ COPY . .
 
 EXPOSE 7860
 
-CMD ["uvicorn", "app.api.routes:app", "--host", "0.0.0.0", "--port", "7860"]
+ENV RUN_MODE=api
+
+CMD ["sh", "-c", "if [ \"$RUN_MODE\" = \"inference\" ]; then python inference.py; else uvicorn app.api.routes:app --host 0.0.0.0 --port 7860; fi"]

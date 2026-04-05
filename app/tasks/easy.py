@@ -1,15 +1,3 @@
-# PURPOSE:
-# - easy level task
-
-# WHY:
-# - problem requires 3 tasks (easy → hard)
-
-# WHAT:
-# - simple scenario
-
-# EXAMPLE:
-# stable company → increase profit by 10%
-
 
 """
 PURPOSE:

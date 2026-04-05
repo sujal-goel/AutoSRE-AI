@@ -1,9 +1,3 @@
-# PURPOSE:
-# - medium difficulty task
-
-# EXAMPLE:
-# manage growth + debt
-
 
 """
 PURPOSE:
