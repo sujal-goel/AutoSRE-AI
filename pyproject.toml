@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "autosre-ai"
+version = "1.0.0"
+description = "OpenEnv-compatible SRE simulation environment with FastAPI runtime"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+  { name = "kanak goel" },
+  { name = "nishant awasthi" },
+  { name = "shourish paul" }
+]
+dependencies = [
+  "fastapi",
+  "uvicorn",
+  "pydantic",
+  "python-dotenv",
+  "google-generativeai",
+  "openai",
+  "aiohttp",
+  "pyyaml",
+  "loguru",
+  "openenv-core"
+]
+
+[tool.setuptools.packages.find]
+include = ["app*"]

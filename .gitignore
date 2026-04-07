@@ -1,6 +1,2 @@
-<<<<<<< HEAD
 venv/*
-=======
-venv
 .env
->>>>>>> 9c33993 (complete project setup)
