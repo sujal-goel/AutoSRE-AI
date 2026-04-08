@@ -127,6 +127,8 @@ class Environment:
 
         return self.state
 
+    async def close(self):
+        return None
     def _get_observation(self):
         """
         PURPOSE:

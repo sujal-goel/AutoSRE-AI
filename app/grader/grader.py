@@ -1,22 +1,3 @@
-# PURPOSE:
-# - score agent performance
-
-# WHY (mandatory):
-# - must return score between 0.0–1.0
-
-# RULE:
-# - deterministic (same input → same output)
-
-# WHAT:
-# score = combination of:
-# - profit
-# - stability
-# - risk
-
-# EXAMPLE:
-# score = 0.5*profit + 0.3*cash - 0.2*risk
-
-
 
 """
 PURPOSE:

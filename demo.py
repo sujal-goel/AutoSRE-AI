@@ -40,9 +40,9 @@ def run_demo():
             grade_hard_task,
             [
                 # Full cascade isolate and wipe workflow
-                Action(action_type="route_traffic", target="backup_zone"),
-                Action(action_type="clear_cache", target="global"),
-                Action(action_type="restart_service", target="primary"),
+                Action(action_type="route_traffic", parameters={"target":"backup_zone"}),
+                Action(action_type="clear_cache", parameters={"target":"global"}),
+                Action(action_type="restart_service", parameters={"target":"primary"}),
             ]
         )
     ]
@@ -59,7 +59,7 @@ def run_demo():
         rewards = []
         for action in actions:
             step_count += 1
-            print(f"Step {step_count:02} | Action: [ {action.action_type.upper()} ] target -> {action.target}")
+            print(f"Step {step_count:02} | Action: [ {action.action_type.upper()} ] target -> {action.parameters["target"]}")
             obs, reward, done, _ = env.step(action)
             rewards.append(reward)
             
@@ -76,7 +76,7 @@ def run_demo():
         print("\n   ... Fast-forwarding remaining environment steps (Agent idle) ...")
         while step_count < env.max_steps and not env._state.done:
              step_count += 1
-             obs, reward, done, _ = env.step(Action(action_type="unknown", target=""))
+             obs, reward, done, _ = env.step(Action(action_type="unknown", parameters={"target":""}))
              rewards.append(reward)
              if done: break
              

@@ -1,24 +1,3 @@
-# 🔥 VERY VERY IMPORTANT
-
-# PURPOSE:
-# - run agent on environment
-
-# WHY:
-# - mandatory (else disqualified)
-
-# MUST FOLLOW FORMAT:
-
-# [START]
-# [STEP]
-# [END]
-
-# RULE:
-# - strict format (no change allowed)
-
-# WHAT IT DOES:
-# - call reset()
-# - loop step()
-# - log output
 
 """
 OpenEnv Inference Script: Runs SRE tasks sequentially.
@@ -30,7 +9,9 @@ import json
 
 from app.env.environment import Environment
 from app.models.action import Action
-from app.grader.grader import grade_easy_task, grade_medium_task, grade_hard_task
+from app.tasks.easy import check_easy_success
+from app.tasks.medium import check_medium_success
+from app.tasks.hard import check_hard_success
 
 # CONFIG
 BENCHMARK = "sre-benchmark"
@@ -40,9 +21,9 @@ HF_TOKEN = os.getenv("HF_TOKEN", "")
 API_KEY = HF_TOKEN if HF_TOKEN else "sk-fake-key" # fallback for local execution without error
 
 TASKS = [
-    ("sre-easy-cpu-spike", grade_easy_task),
-    ("sre-medium-db-zombie", grade_medium_task),
-    ("sre-hard-cache-failure", grade_hard_task)
+    ("sre-easy-cpu-spike", check_easy_success),
+("sre-medium-db-zombie", check_medium_success),
+("sre-hard-cache-failure", check_hard_success)
 ]
 
 def log_start(task: str, env: str, model: str):
@@ -95,46 +76,57 @@ Respond ONLY with valid JSON, no extra text:
             content = json_match.group(0)
 
         data = json.loads(content)
-        return Action(action_type=data.get("action_type", ""), target=data.get("target", ""))
+        return Action(action_type=data.get("action_type", ""), parameters={"target":data.get("target", "")})
     except Exception as e:
         print(f"LLM Exception: {str(e)}", flush=True)
-        return Action(action_type="unknown", target="")
+        return Action(action_type="unknown", parameters ={})
 
 async def run_task(task_name: str, grader_func, client: AsyncOpenAI):
     env = Environment()
     rewards = []
     
     log_start(task_name, BENCHMARK, MODEL_NAME)
-    
-    observation = env.reset(task_name=task_name)
-    done = False
-    step_count = 0
-    
-    while step_count < env.max_steps and not done:
-        step_count += 1
-        
-        # LLM Call
-        action = await get_action_from_llm(client, json.dumps(observation.model_dump()))
-        
-        # In case action failed to parse
-        if action.action_type == "unknown":
-             error_val = "json parse error"
-             reward = 0.0
-             done = True
-        else:
-             observation, reward, done, _ = env.step(action)
-             error_val = None
-             
-        rewards.append(reward)
-        log_step(step=step_count, action=f"{action.action_type}_{action.target}", reward=reward, done=done, error=error_val)
-        
-    # Grading
-    score = grader_func(env.state())
-    success = score > 0.5
-    
-    log_end(success=success, steps=step_count, score=score, rewards=rewards)
+    try: 
+        observation = env.reset()
+        done = False
+        step_count = 0
+
+        while step_count < env.max_steps and not done:
+            step_count += 1
+
+            # LLM Call
+            action = await get_action_from_llm(client, json.dumps(observation.model_dump()))
+
+            # In case action failed to parse
+            if action.action_type == "unknown":
+                 error_val = "json parse error"
+                 reward = 0.0
+                 done = True
+            else:
+                 observation, reward, done, _ = env.step(action)
+                 error_val = None
+
+            rewards.append(reward)
+            log_step(step=step_count, action=f"{action.action_type}_{action.parameters["target"]}", reward=reward, done=done, error=error_val)
+
+        # Grading
+        score = grader_func(env.state_fn().data)
+        score = max(0.0, min(score, 1.0))
+        success = score > 0.5
+    finally:
+        try:
+            close_fn = getattr(env, "close", None)
+            if callable(close_fn):
+                close_result = close_fn()
+                if asyncio.iscoroutine(close_result):
+                    await close_result
+        except Exception as e:
+            print(f"[DEBUG] env.close() error: {e}", flush=True)
+
+        log_end(success=success, steps=step_count, score=score, rewards=rewards)
 
 async def main():
+
     max_retries = 3
     client = AsyncOpenAI(
         api_key=API_KEY,
