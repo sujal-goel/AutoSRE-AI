@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+pydantic
+python-dotenv
+google-generativeai
+openai
+aiohttp
+pyyaml
+loguru
+openenv-core

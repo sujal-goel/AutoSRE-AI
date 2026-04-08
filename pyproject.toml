@@ -27,4 +27,7 @@ dependencies = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["app*"]
+include = ["app*", "server*"]
+
+[project.scripts]
+start = "server.app:main"
