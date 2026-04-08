@@ -1,13 +1,3 @@
-# PURPOSE:
-# - connect to Gemini API
-
-# WHAT:
-# - send prompt
-# - get response
-
-# NOTE:
-# - use GEMINI_API_KEY from .env
-
 
 """
 PURPOSE:

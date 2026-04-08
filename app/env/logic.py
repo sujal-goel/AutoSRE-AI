@@ -1,14 +1,3 @@
-# PURPOSE:
-# - keep business logic separate
-
-# WHY:
-# - clean code (better design → higher marks)
-
-# WHAT:
-# - functions like:
-#   update_revenue()
-#   calculate_profit()
-#   apply_action()
 
 
 """
@@ -42,18 +31,32 @@ def apply_action(state_data: Dict[str, Any], action_type: str, parameters: Dict[
     - updated state_data
     """
 
-    # Example generic logic (can change later based on idea)
+    value = state_data.get("value", 0)
+    target = parameters.get("target", "")
 
-    if action_type == "increase":
-        value = parameters.get("value", 0)
-        state_data["value"] = state_data.get("value", 0) + value
+    if action_type in {"scale_up", "increase"}:
+        state_data["value"] = value + 10
 
-    elif action_type == "decrease":
-        value = parameters.get("value", 0)
-        state_data["value"] = state_data.get("value", 0) - value
+    elif action_type in {"scale_down", "decrease"}:
+        state_data["value"] = value - 5
+
+    elif action_type == "kill_zombies":
+        state_data["value"] = value + 15
+
+    elif action_type == "route_traffic":
+        state_data["value"] = value + 8
+
+    elif action_type == "clear_cache":
+        state_data["value"] = value + 12
+
+    elif action_type == "restart_service":
+        state_data["value"] = value + 20
 
     elif action_type == "reset_value":
         state_data["value"] = 0
+
+    if target:
+        state_data["last_target"] = target
 
     # default (no change)
     return state_data
@@ -73,10 +76,9 @@ def calculate_reward(state_data: Dict[str, Any]) -> float:
 
     value = state_data.get("value", 0)
 
-    # simple normalized reward
     reward = value / 100.0
 
-    return reward
+    return max(-1.0, min(reward, 1.0))
 
 
 def check_done(step_count: int, max_steps: int = 10) -> bool:

@@ -6,6 +6,7 @@ import os
 import asyncio
 from openai import AsyncOpenAI
 import json
+from dotenv import load_dotenv
 
 from app.env.environment import Environment
 from app.models.action import Action
@@ -13,12 +14,16 @@ from app.tasks.easy import check_easy_success
 from app.tasks.medium import check_medium_success
 from app.tasks.hard import check_hard_success
 
+load_dotenv()
+
 # CONFIG
 BENCHMARK = "sre-benchmark"
 MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o")
 API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
-HF_TOKEN = os.getenv("HF_TOKEN", "")
-API_KEY = HF_TOKEN if HF_TOKEN else "sk-fake-key" # fallback for local execution without error
+API_KEY = os.getenv("HF_TOKEN") or os.getenv("OPENAI_API_KEY")
+
+if not API_KEY:
+    raise RuntimeError("Missing API key. Set HF_TOKEN or OPENAI_API_KEY in your environment or .env file.")
 
 TASKS = [
     ("sre-easy-cpu-spike", check_easy_success),
@@ -76,55 +81,57 @@ Respond ONLY with valid JSON, no extra text:
             content = json_match.group(0)
 
         data = json.loads(content)
-        return Action(action_type=data.get("action_type", ""), parameters={"target":data.get("target", "")})
+        return Action(action_type=data.get("action_type", ""), parameters={"target": data.get("target", "")})
     except Exception as e:
         print(f"LLM Exception: {str(e)}", flush=True)
-        return Action(action_type="unknown", parameters ={})
+        return Action(action_type="unknown", parameters={})
 
 async def run_task(task_name: str, grader_func, client: AsyncOpenAI):
     env = Environment()
     rewards = []
-    
+    step_count = 0
+    score = 0.0
+    success = False
+
     log_start(task_name, BENCHMARK, MODEL_NAME)
-    try: 
+    try:
         observation = env.reset()
         done = False
-        step_count = 0
 
         while step_count < env.max_steps and not done:
             step_count += 1
-
-            # LLM Call
             action = await get_action_from_llm(client, json.dumps(observation.model_dump()))
 
-            # In case action failed to parse
             if action.action_type == "unknown":
-                 error_val = "json parse error"
-                 reward = 0.0
-                 done = True
+                error_val = "json parse error"
+                reward = 0.0
+                done = True
             else:
-                 observation, reward, done, _ = env.step(action)
-                 error_val = None
+                observation, reward, done, _ = env.step(action)
+                error_val = None
 
             rewards.append(reward)
-            log_step(step=step_count, action=f"{action.action_type}_{action.parameters["target"]}", reward=reward, done=done, error=error_val)
+            target = (action.parameters or {}).get("target", "")
+            log_step(
+                step=step_count,
+                action=f"{action.action_type}_{target}",
+                reward=reward,
+                done=done,
+                error=error_val,
+            )
 
-        # Grading
-        score = grader_func(env.state_fn().data)
-        score = max(0.0, min(score, 1.0))
+        score = grader_func(env.state().data)
         success = score > 0.5
     finally:
         try:
-            close_fn = getattr(env, "close", None)
-            if callable(close_fn):
-                close_result = close_fn()
-                if asyncio.iscoroutine(close_result):
-                    await close_result
+            close_result = env.close()
+            if asyncio.iscoroutine(close_result):
+                await close_result
         except Exception as e:
             print(f"[DEBUG] env.close() error: {e}", flush=True)
 
         log_end(success=success, steps=step_count, score=score, rewards=rewards)
-
+        
 async def main():
 
     max_retries = 3

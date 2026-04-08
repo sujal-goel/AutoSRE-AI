@@ -1,12 +1,3 @@
-# PURPOSE:
-# - connect to OpenAI API
-
-# WHY:
-# - required in original problem
-
-# NOTE:
-# - can switch anytime using router
-
 
 """
 PURPOSE:

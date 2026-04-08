@@ -1,16 +1,3 @@
-# PURPOSE:
-# - switch between Gemini and OpenAI
-
-# WHY:
-# - flexibility (your requirement)
-
-# LOGIC:
-# if USE_GEMINI:
-#   use gemini_client
-# else:
-#   use openai_client
-
-# ONLY CHANGE HERE TO SWITCH MODEL
 
 
 """

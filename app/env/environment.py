@@ -1,41 +1,3 @@
-# 🔥 MOST IMPORTANT FILE
-
-# PURPOSE:
-# - implement RL environment
-
-# REQUIRED FUNCTIONS (from problem):
-# 1. reset()
-# 2. step(action)
-# 3. state()
-
-# WHY:
-# - OpenEnv requires step/reset/state API
-
-# LOGIC:
-
-# reset():
-# - initialize company state
-# - return initial observation
-
-# step(action):
-# - apply action
-# - update revenue/expenses
-# - calculate reward
-# - check done condition
-
-# RETURN:
-# observation, reward, done, info
-
-# state():
-# - return full state object
-
-# REWARD RULE:
-# - should NOT be binary
-# - give partial progress (important)
-
-# EXAMPLE:
-# reward = profit growth - risk
-
 
 """
 🔥 CORE FILE (MOST IMPORTANT)
@@ -59,7 +21,8 @@ from app.models.observation import Observation
 from app.models.state import State
 
 from app.env.logic import apply_action, calculate_reward, check_done
-
+from dotenv import load_dotenv
+load_dotenv()
 
 class Environment:
 
@@ -76,7 +39,7 @@ class Environment:
         - initial observation
         """
 
-        self.state = State(
+        self._state = State(
             step_count=0,
             done=False,
             data={
@@ -98,26 +61,34 @@ class Environment:
         - observation, reward, done, info
         """
 
-        if self.state.done:
+        if self._state.done:
             return self._get_observation(), 0.0, True, {}
 
         # increment step
-        self.state.step_count += 1
+        self._state.step_count += 1
 
         # apply action using logic.py
-        self.state.data = apply_action(
-            self.state.data,
+        self._state.data = apply_action(
+            self._state.data,
             action.action_type,
             action.parameters or {}
         )
 
         # calculate reward
-        reward = calculate_reward(self.state.data)
+        reward = calculate_reward(self._state.data)
 
         # check done condition
-        self.state.done = check_done(self.state.step_count, self.max_steps)
+        self._state.done = check_done(self._state.step_count, self.max_steps)
 
-        return self._get_observation(), reward, self.state.done, {}
+        return self._get_observation(), reward, self._state.done, {}
+
+    def state(self):
+        """
+        PURPOSE:
+        - Return full internal state
+        """
+
+        return self._state
 
     def state_fn(self):
         """
@@ -125,10 +96,11 @@ class Environment:
         - Return full internal state
         """
 
-        return self.state
+        return self.state()
 
     async def close(self):
         return None
+
     def _get_observation(self):
         """
         PURPOSE:
@@ -136,6 +108,6 @@ class Environment:
         """
 
         return Observation(
-            data=self.state.data,
+            data=self._state.data,
             message="Current environment state"
         )
